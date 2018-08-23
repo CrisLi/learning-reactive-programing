@@ -1,0 +1,63 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Visitors</title>
+  <link href="https://cdn.bootcss.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <form id="check-in-form">
+      <div class="form-row align-items-center">
+        <div class="col-auto">
+          <input id="user" type="text" class="form-control mb-2" id="inlineFormInput" placeholder="User" autocomplete="off">
+        </div>
+        <div class="col-auto">
+          <button id="check-in-btn" class="btn btn-primary mb-2">Check In</button>
+        </div>
+      </div>
+    </form>
+    <ul id="user-list" class="list-group">
+    </ul>
+  </div>
+  <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.slim.js"></script>
+  <script>
+    $(() => {
+
+      $('#check-in-form').submit(function(e) {
+
+        e.preventDefault();
+
+        $(this).attr('disabled', 'disabled');
+       
+        const user = $('#user').val();
+        
+        if (user) {
+          fetch(`/visitors/online?user=${user}`)
+            .then(() => {
+              $(this).removeAttr('disabled', '')
+              $('#user').val('');
+            })
+            .catch(e => console.error(e));
+        }
+
+      });
+
+      const userEventSource = new EventSource("/visitors/userStream");
+
+      userEventSource.onmessage = (e) => {
+        const check = JSON.parse(e.data);
+        $('#user-list')
+          .append(
+            $('<li class="list-group-item" />')
+          	  .append($('<strong />').text(check.name))
+              .append(' check in at ')
+          	  .append($('<i />').text(new Date(check.checkedAt).toLocaleString()))
+          );
+      }
+      
+    });
+  </script>
+</body>
+</html>
